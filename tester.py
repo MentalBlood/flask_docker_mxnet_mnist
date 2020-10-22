@@ -1,17 +1,16 @@
 from __future__ import print_function
 import requests
 import json
+import numpy as np
 
-addr = 'http://localhost:5000'
-test_url = addr + '/log'
+testUrl = 'http://localhost:5000/log'
+headers = {'content-type': 'application/json'}
 
-# prepare headers for http request
-content_type = 'image/jpeg'
-headers = {'content-type': content_type}
+imgPaths = ['3.png', '1.png']
+def readImage(path):
+	result = open(path, 'rb').read()
+	return result
+img = list(map(readImage, imgPaths))
+response = requests.post(testUrl, data=b'end'.join(img), headers=headers)
 
-# send http request with image and receive response
-img_path = '3.png'
-img = open(img_path, 'rb').read()
-response = requests.post(test_url, data=img, headers=headers)
-# decode response
 print(json.loads(response.text))

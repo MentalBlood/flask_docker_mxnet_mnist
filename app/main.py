@@ -12,22 +12,30 @@ import mxnet.ndarray as F
 
 import cv2
 
-def buildNet(net):
-	with net.name_scope():
-		# First convolution
-		net.add(nn.Conv2D(10, kernel_size=5, activation='tanh'))
-		net.add(nn.MaxPool2D(pool_size=2, strides=2))
-		# Second convolution
-		net.add(nn.Conv2D(25, kernel_size=5, activation='tanh'))
-		net.add(nn.MaxPool2D(pool_size=2, strides=2))
-		# First fully connected layers with 20 neurons
-		net.add(nn.Dense(20, activation='tanh'))
-		# Second fully connected layer with as many neurons as the number of classes
-		net.add(nn.Dense(10, activation='tanh'))
-		return net
+nets = {
+	'MNIST': {
+		'layers': [
+			nn.Conv2D(10, kernel_size=5, activation='tanh'),
+			nn.MaxPool2D(pool_size=2, strides=2),
+			nn.Conv2D(25, kernel_size=5, activation='tanh'),
+			nn.MaxPool2D(pool_size=2, strides=2),
+			nn.Dense(20, activation='tanh'),
+			nn.Dense(10, activation='tanh')
+		],
+		'paramsFile': 'net.params'
+	}
+}
 
-net = buildNet(nn.Sequential())
-net.load_parameters('net.params')
+def buildNet(netName):
+	net = nn.Sequential()
+	for layer in nets[netName]['layers']:
+		net.add(layer)
+	paramsFile = nets[netName]['paramsFile']
+	if paramsFile:
+		net.load_parameters(paramsFile)
+	return net
+
+mnistNet = buildNet('MNIST')
 
 import mxnet.ndarray as nd
 from mxnet import nd, autograd, gluon
@@ -36,36 +44,7 @@ from mxnet.gluon.data.vision import transforms
 import matplotlib.pyplot as plt
 import numpy as np
 
-def verify_loaded_model(net, data):
-	"""Run inference using ten random images.
-	Print both input and output of the model"""
-
-	def transform(data, label):
-		return data.astype(np.float32)/255, label.astype(np.float32)
-
-	imagesNumber = 1
-	# Load random images from the test dataset
-	#sample_data = mx.gluon.data.DataLoader(mx.gluon.data.vision.MNIST(train=False,
-	#																  transform=transform),
-	#									   imagesNumber, shuffle=True)
-
-
-
-	#for data, label in sample_data:
-
-		# Display the images
-		#img = nd.transpose(data, (1, 0, 2, 3))
-		#img = nd.reshape(img, (28, imagesNumber*28, 1))
-		#imtiles = nd.tile(img, (1, 1, 3))
-		##images = imtiles.asnumpy()
-		#plt.imshow(imtiles.asnumpy())
-		#plt.show()
-
-		# Display the predictions
-	rgb_weights = [0.2989, 0.5870, 0.1140]
-	grayscale_image = np.dot(data[...,:3], rgb_weights)
-	data = np.array([grayscale_image.astype(np.float32)/255]).reshape(1, 28, 28, 1)
-	print('SHAPE IS', data.shape)
+def verifyLoadedModel(net, data):
 	data = nd.transpose(nd.array(data), (0, 3, 1, 2))
 	out = net(data)
 	predictions = nd.argmax(out, axis=1)
@@ -75,16 +54,18 @@ def verify_loaded_model(net, data):
 app = Flask(__name__)
 api = Api(app)
 
+def prepareImage(img):
+	nparr = np.frombuffer(img, np.uint8)
+	grayscale = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+	return np.array(grayscale.astype(np.float32)/255).reshape(28, 28, 1)
+
+def prepareData(data):
+	return list(map(prepareImage, data))
+
 @app.route('/log', methods=['POST'])
 def json_example():
-	r = request
-	# convert string of image data to uint8
-	nparr = np.fromstring(r.data, np.uint8)
-	# decode image
-	img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-	return verify_loaded_model(net, img)
-	response = {'message': 'image received. size={}x{}'.format(img.shape[1], img.shape[0])}
-	return response
+	data = request.data.split(b'end')
+	return verifyLoadedModel(mnistNet, prepareData(data))
 
 if __name__ == '__main__':
 	app.run()
