@@ -1,4 +1,4 @@
-# Simple dockerizable flask app using REST API
+# Simple dockerizable mxnet MNIST/FashionMNIST prediction app using Flask-powered REST API
 
 ## Build
     docker build -t new_image .
