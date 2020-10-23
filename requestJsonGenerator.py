@@ -1,5 +1,4 @@
 from __future__ import print_function
-import requests
 import json
 import base64
 import argparse
@@ -10,7 +9,6 @@ parser.add_argument('files', metavar='N', type=str, nargs='+',
 args = parser.parse_args()
 
 imgPaths = args.files
-print('images:', imgPaths)
 def readImage(path):
 	result = None
 	with open(path, 'rb') as image:
@@ -19,9 +17,4 @@ def readImage(path):
 	return result
 img = list(map(readImage, imgPaths))
 jsonString = json.dumps({'images': img})
-print('json:', jsonString)
-
-testUrl = 'http://localhost:5000/log'
-headers = {'content-type': 'application/json'}
-response = requests.post(testUrl, json={'images': img}, headers=headers)
-print('response:', json.loads(response.text))
+print(jsonString)

@@ -11,6 +11,7 @@ from mxnet import autograd as ag
 import mxnet.ndarray as F
 
 import cv2
+import base64
 
 nets = {
 	'MNIST': {
@@ -54,8 +55,9 @@ def verifyLoadedModel(net, data):
 app = Flask(__name__)
 api = Api(app)
 
-def prepareImage(img):
-	nparr = np.frombuffer(img, np.uint8)
+def prepareImage(imageString):
+	imageBytes = base64.decodebytes(imageString.encode('utf-8'))
+	nparr = np.frombuffer(imageBytes, np.uint8)
 	grayscale = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
 	return np.array(grayscale.astype(np.float32)/255).reshape(28, 28, 1)
 
@@ -64,7 +66,7 @@ def prepareData(data):
 
 @app.route('/log', methods=['POST'])
 def json_example():
-	data = request.data.split(b'end')
+	data = request.get_json()['images']
 	return verifyLoadedModel(mnistNet, prepareData(data))
 
 if __name__ == '__main__':
