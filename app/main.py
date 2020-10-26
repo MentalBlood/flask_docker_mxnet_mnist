@@ -1,8 +1,5 @@
-from __future__ import print_function
-
 from flask import Flask, request
 from flask_restful import Resource, Api
-from logging.config import dictConfig
 
 import mxnet as mx
 from mxnet import gluon
@@ -15,42 +12,51 @@ import base64
 
 nets = {
 	'MNIST': {
-		'layers': [
-			nn.Conv2D(10, kernel_size=5, activation='tanh'),
-			nn.MaxPool2D(pool_size=2, strides=2),
-			nn.Conv2D(25, kernel_size=5, activation='tanh'),
-			nn.MaxPool2D(pool_size=2, strides=2),
-			nn.Dense(20, activation='tanh'),
-			nn.Dense(10, activation='tanh')
-		],
-		'paramsFile': 'net.params'
+		'modelFile': 'mnist-symbol.json',
+		'paramsFile': 'mnist-0035.params',
+		'textLabels': None
+	},
+	'FashionMNIST': {
+		'modelFile': 'fashion-mnist-symbol.json',
+		'paramsFile': 'fashion-mnist-0039.params',
+		'textLabels':	[
+							't-shirt',
+							'trouser',
+							'pullover',
+							'dress',
+							'coat',
+							'sandal',
+							'shirt',
+							'sneaker',
+							'bag',
+							'ankle boot'
+						]
 	}
 }
 
-def buildNet(netName):
-	net = nn.Sequential()
-	for layer in nets[netName]['layers']:
-		net.add(layer)
-	paramsFile = nets[netName]['paramsFile']
-	if paramsFile:
-		net.load_parameters(paramsFile)
-	return net
+def buildNets():
+	for netName in nets:
+		model = nets[netName]['modelFile']
+		parameters = nets[netName]['paramsFile']
+		nets[netName]['net'] = nn.SymbolBlock.imports(model, ['data'], parameters)
 
-mnistNet = buildNet('MNIST')
+buildNets()
 
 import mxnet.ndarray as nd
 from mxnet import nd, autograd, gluon
 from mxnet.gluon.data.vision import transforms
 
-import matplotlib.pyplot as plt
 import numpy as np
 
-def verifyLoadedModel(net, data):
+def verifyLoadedModel(net, data, textLabels):
 	data = nd.transpose(nd.array(data), (0, 3, 1, 2))
 	out = net(data)
-	predictions = nd.argmax(out, axis=1)
+	predictions = nd.argmax(out, axis=1).asnumpy()
 
-	return {'predictions': [int(p) for p in predictions.asnumpy()]}
+	if textLabels:
+		return {'predictions': [(int(p), textLabels[int(p)]) for p in predictions]}
+	else:
+		return {'predictions': [int(p) for p in predictions]}
 
 app = Flask(__name__)
 api = Api(app)
@@ -66,8 +72,11 @@ def prepareData(data):
 
 @app.route('/log', methods=['POST'])
 def json_example():
+	netName = request.get_json()['netName']
+	net = nets[netName]['net']
 	data = request.get_json()['images']
-	return verifyLoadedModel(mnistNet, prepareData(data))
+	textLabels = nets[netName]['textLabels']
+	return verifyLoadedModel(net, prepareData(data), textLabels)
 
 if __name__ == '__main__':
 	app.run()
