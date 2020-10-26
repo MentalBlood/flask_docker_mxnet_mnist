@@ -3,11 +3,11 @@ import base64
 import argparse
 
 parser = argparse.ArgumentParser(description='Generate JSON for request')
-parser.add_argument('--dataset', type=str, nargs='?',
+parser.add_argument('--dataset', type=str, nargs='?', required=True,
 					choices=['MNIST', 'FashionMNIST'],
 					default='MNIST',
                     help='dataset model should be trained on')
-parser.add_argument('--images', metavar='image', type=str, nargs='+',
+parser.add_argument('--images', metavar='image', type=str, required=True, nargs='+',
                     help='paths to files to send in request')
 args = parser.parse_args()
 
