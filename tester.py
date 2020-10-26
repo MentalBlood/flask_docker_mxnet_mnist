@@ -24,7 +24,7 @@ img = list(map(readImage, imgPaths))
 requestJson = {'images': img, 'netName': netName}
 print('request json:', json.dumps(requestJson))
 
-testUrl = 'http://localhost:8080/log'
+testUrl = 'http://localhost:8080/classify'
 headers = {'content-type': 'application/json'}
 response = requests.post(testUrl, json=requestJson, headers=headers)
 print('response json:', json.loads(response.text))

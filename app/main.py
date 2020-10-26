@@ -70,7 +70,7 @@ def prepareImage(imageString):
 def prepareData(data):
 	return list(map(prepareImage, data))
 
-@app.route('/log', methods=['POST'])
+@app.route('/classify', methods=['POST'])
 def json_example():
 	netName = request.get_json()['netName']
 	net = nets[netName]['net']
