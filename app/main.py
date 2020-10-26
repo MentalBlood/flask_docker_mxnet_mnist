@@ -13,12 +13,12 @@ import base64
 nets = {
 	'MNIST': {
 		'modelFile': 'mnist-symbol.json',
-		'paramsFile': 'mnist-0035.params',
+		'paramsFile': 'mnist.params',
 		'textLabels': None
 	},
 	'FashionMNIST': {
 		'modelFile': 'fashion-mnist-symbol.json',
-		'paramsFile': 'fashion-mnist-0039.params',
+		'paramsFile': 'fashion-mnist.params',
 		'textLabels':	[
 							't-shirt',
 							'trouser',
