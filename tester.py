@@ -21,7 +21,7 @@ def readImage(path):
 		result = base64.encodebytes(imageBytes).decode("utf-8")
 	return result
 img = list(map(readImage, imgPaths))
-requestJson = {'images': img, 'netName': netName}
+requestJson = {'images': img, 'dataset': netName}
 print('request json:', json.dumps(requestJson))
 
 testUrl = 'http://localhost:8080/classify'

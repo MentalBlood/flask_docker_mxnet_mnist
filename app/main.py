@@ -72,7 +72,7 @@ def prepareData(data):
 
 @app.route('/classify', methods=['POST'])
 def json_example():
-	netName = request.get_json()['netName']
+	netName = request.get_json()['dataset']
 	net = nets[netName]['net']
 	data = request.get_json()['images']
 	textLabels = nets[netName]['textLabels']

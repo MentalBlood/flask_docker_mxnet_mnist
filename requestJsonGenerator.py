@@ -20,5 +20,5 @@ def readImage(path):
 		result = base64.encodebytes(imageBytes).decode("utf-8")
 	return result
 img = list(map(readImage, imgPaths))
-jsonString = json.dumps({'images': img, 'netName': netName})
+jsonString = json.dumps({'images': img, 'dataset': netName})
 print(jsonString)
